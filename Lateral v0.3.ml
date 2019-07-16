@@ -465,5 +465,3 @@ in
 writeOut(makeList(acc,[],[[]],lettersList,[[]]))
 ;;
 
-(*interpreter("Part3Sample/input/input4.txt","output.txt")*)
-(*interpreter("userInput.txt","userOutput.txt")*)
