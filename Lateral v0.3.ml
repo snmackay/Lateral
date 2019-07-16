@@ -459,7 +459,7 @@ let rec makeList  (acc,commandList,constList,lettersList,bindList) =
                   |"call"::trash -> makeList(tl,CALL::commandList,constList,lettersList,bindList)
                   |"funEnd"::trash -> makeList(tl,FUNEND::commandList,constList,lettersList,bindList)
                   |"inOutFun"::name::param::trash -> makeList(tl,INOUTFUN(name,param)::commandList,constList,lettersList,bindList)
-                  |_-> makeList(tl,PUSH(ERROR)::commandList,constList,lettersList,bindList)
+                  |_-> Printf.printf "Syntax Error!" 
                   )
 in
 writeOut(makeList(acc,[],[[]],lettersList,[[]]))
