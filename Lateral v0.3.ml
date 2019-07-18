@@ -4,9 +4,9 @@
  * 3/30/19                          *)
 
 exception Foo of string
-type const = BOOL of bool| INT of int | ERROR | S of string | N of string | UNIT | FUNCT of const*const*(command list)*(const*const) list list
+type const = BOOL of bool| INT of int | FLO of float | ERROR | S of string | N of string | UNIT | FUNCT of const*const*(command list)*(const*const) list list
 and
-command = PUSH of const | PUSHI of int | PUSHS of string | PUSHN of string | PUSHB of bool | POP | ADD | SUB | MUL | DIV | REM | NEG | SWAP | QUIT | CAT | AND | OR | NOT | EQUAL | LESS | BIND | IF | LET | END | FUN of string*string | RETURN | FUNEND |  CALL | INOUTFUN of string*string
+command = PUSH of const | PUSHI of int | PUSHF of float | PUSHS of string | PUSHN of string | PUSHB of bool | POP | ADD | SUB | MUL | DIV | REM | NEG | SWAP | QUIT | CAT | AND | OR | NOT | EQUAL | LESS | BIND | IF | LET | END | FUN of string*string | RETURN | FUNEND |  CALL | INOUTFUN of string*string
 
 
 
@@ -36,6 +36,9 @@ let rec writeOut ((constList: const list list),bindList) : unit  =
                           match hd with
                           |INT(a) -> (
                               Printf.fprintf oc "%s\n" (string_of_int a);
+                              writeOut (((tl)::back),bindList))
+                          |FLO(a) -> (
+                              Printf.fprintf oc "%s\n" (string_of_float a);
                               writeOut (((tl)::back),bindList))
                           |BOOL(a) -> (
                               Printf.fprintf oc "%s\n" (":"^(string_of_bool a)^":");
@@ -78,6 +81,11 @@ let rec bindListHas (bindList,name) :const =
                                          | 0 -> BOOL(rl)
                                          | _ -> bindListHas(tr::tl,name)
                                         )
+               |(N(a),FLO(rl))::tr -> (
+                                         match (compare name a ) with
+                                         | 0 -> FLO(rl)
+                                         | _ -> bindListHas(tr::tl,name)
+                                      )
                |(N(a),S(rl))::tr -> (
                                          match (compare name a ) with
                                          | 0 -> S(rl)
@@ -183,6 +191,7 @@ let rec addToTuple (commandList,(constList :const list list),(bindList :(const*c
                                                 )
       |(PUSHB(a)::rl,hd::tl,_) -> addToTuple (rl,(BOOL(a)::hd)::tl,bindList)
       |(PUSHI(a)::rl,(aa)::tl,_) -> addToTuple (rl,(INT(a)::aa)::tl,bindList)
+      |(PUSHF(a)::rl,(aa)::tl,_) -> addToTuple (rl,(FLO(a)::aa)::tl,bindList)
       |(PUSHS(a)::rl,(aa)::tl,_) -> addToTuple (rl,(S(a)::aa)::tl,bindList)
       |(PUSHN(a)::rl,(aa)::tl,_) -> addToTuple (rl,(N(a)::aa)::tl,bindList)
       |(PUSH(a)::rl,(aa)::tl,_) -> addToTuple (rl,(a::aa)::tl,bindList)
@@ -419,6 +428,9 @@ let rec makeList  (acc,commandList,constList,lettersList,bindList) =
                   match String.split_on_char ' ' hd with
                   |"pushi"::rl::trash ->(try makeList(tl,PUSHI(int_of_string rl)::commandList,constList,lettersList,bindList) with
                                   | Failure(int_of_string) -> makeList(tl,PUSH(ERROR)::commandList,constList,lettersList,bindList)
+                                 )
+                  |"pushf"::rl::trash ->(try makeList(tl,PUSHF(float_of_string rl)::commandList,constList,lettersList,bindList) with
+                                  | Failure(float_of_string) -> makeList(tl,PUSH(ERROR)::commandList,constList,lettersList,bindList)
                                  )
                   |"pushb"::rl::trash ->(match rl with
                                   |":true:" -> makeList(tl,PUSHB(true)::commandList,constList,lettersList,bindList)
