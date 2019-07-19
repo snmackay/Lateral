@@ -536,54 +536,55 @@ let rec makeList  (acc,commandList,constList,lettersList,bindList) =
       | []-> addToTuple(commandList,constList,bindList)
       | hd::tl -> (
                   match String.split_on_char ' ' hd with
-                  |"pushi"::rl::trash ->(try makeList(tl,PUSHI(int_of_string rl)::commandList,constList,lettersList,bindList) with
+                  |"int"::rl::trash ->(try makeList(tl,PUSHI(int_of_string rl)::commandList,constList,lettersList,bindList) with
                                   | Failure(int_of_string) -> makeList(tl,PUSH(ERROR)::commandList,constList,lettersList,bindList)
                                  )
-                  |"pushf"::rl::trash ->(try makeList(tl,PUSHF(float_of_string rl)::commandList,constList,lettersList,bindList) with
+                  |"float"::rl::trash ->(try makeList(tl,PUSHF(float_of_string rl)::commandList,constList,lettersList,bindList) with
                                   | Failure(float_of_string) -> makeList(tl,PUSH(ERROR)::commandList,constList,lettersList,bindList)
                                  )
-                  |"pushb"::rl::trash ->(match rl with
+                  |"bool"::rl::trash ->(match rl with
                                   |":true:" -> makeList(tl,PUSHB(true)::commandList,constList,lettersList,bindList)
                                   |":false:" -> makeList(tl,PUSHB(false)::commandList,constList,lettersList,bindList)
                                   |_ -> makeList(tl,PUSH(ERROR)::commandList,constList,lettersList,bindList)
                                   )
-                  |"pushs"::rl -> ( if (Char.equal (String.concat " " rl).[0] '"') && (Char.equal(String.concat " " rl).[String.length(String.concat " " rl)-1] '"')
+                  |"str"::rl -> ( if (Char.equal (String.concat " " rl).[0] '"') && (Char.equal(String.concat " " rl).[String.length(String.concat " " rl)-1] '"')
                                     then makeList(tl,PUSHS(String.concat " " rl)::commandList,constList,lettersList,bindList) else
                                     makeList(tl,PUSH(ERROR)::commandList,constList,lettersList,bindList)  )
-                  |"pushn"::rl::trash -> makeList(tl,(nvalid rl lettersList)::commandList,constList,lettersList,bindList)
-                  |"push"::rl::trash ->  (
+                  |"var"::rl::trash -> makeList(tl,(nvalid rl lettersList)::commandList,constList,lettersList,bindList)
+                  |"errun"::rl::trash ->  (
                                   match (rl) with
                                   | ":error:" -> makeList(tl,PUSH(ERROR)::commandList, constList,lettersList,bindList)
                                   | ":unit:" -> makeList(tl,PUSH(UNIT)::commandList, constList,lettersList,bindList)
                                   | _ -> makeList(tl,PUSH(ERROR)::commandList,constList,lettersList,bindList)
                     )
-                  |"pop"::trash -> makeList(tl,POP::commandList,constList,lettersList,bindList)
-                  |"add"::trash -> makeList(tl,ADD::commandList,constList,lettersList,bindList)
-                  |"sub"::trash -> makeList(tl,SUB::commandList,constList,lettersList,bindList)
-                  |"mul"::trash -> makeList(tl,MUL::commandList,constList,lettersList,bindList)
-                  |"div"::trash -> makeList(tl,DIV::commandList,constList,lettersList,bindList)
-                  |"rem"::trash -> makeList(tl,REM::commandList,constList,lettersList,bindList)
+                  |"del"::trash -> makeList(tl,POP::commandList,constList,lettersList,bindList)
+                  |"+"::trash -> makeList(tl,ADD::commandList,constList,lettersList,bindList)
+                  |"-"::trash -> makeList(tl,SUB::commandList,constList,lettersList,bindList)
+                  |"*"::trash -> makeList(tl,MUL::commandList,constList,lettersList,bindList)
+                  |"/"::trash -> makeList(tl,DIV::commandList,constList,lettersList,bindList)
+                  |"mod"::trash -> makeList(tl,REM::commandList,constList,lettersList,bindList)
                   |"floor"::trash -> makeList(tl,ROW::commandList,constList,lettersList,bindList)
                   |"neg"::trash -> makeList(tl,NEG::commandList,constList,lettersList,bindList)
                   |"swap"::trash -> makeList(tl,SWAP::commandList,constList,lettersList,bindList)
                   |"quit"::trash -> makeList(tl,QUIT::commandList,constList,lettersList,bindList)
-                  |"cat"::trash -> makeList(tl,CAT::commandList,constList,lettersList,bindList)
+                  |"^"::trash -> makeList(tl,CAT::commandList,constList,lettersList,bindList)
                   |"and"::trash -> makeList(tl,AND::commandList,constList,lettersList,bindList)
                   |"or"::trash -> makeList(tl,OR::commandList,constList,lettersList,bindList)
                   |"not"::trash -> makeList(tl,NOT::commandList,constList,lettersList,bindList)
-                  |"equal"::trash -> makeList(tl,EQUAL::commandList,constList,lettersList,bindList)
-                  |"lessThan"::trash -> makeList(tl,LESS::commandList,constList,lettersList,bindList)
-                  |"bind"::trash -> makeList(tl,BIND::commandList,constList,lettersList,bindList)
+                  |"=="::trash -> makeList(tl,EQUAL::commandList,constList,lettersList,bindList)
+                  |"lessthan"::trash -> makeList(tl,LESS::commandList,constList,lettersList,bindList)
+                  |"tie"::trash -> makeList(tl,BIND::commandList,constList,lettersList,bindList)
                   |"if"::trash -> makeList(tl,IF::commandList,constList,lettersList,bindList)
-                  |"let"::trash -> makeList(tl,LET::commandList,constList,lettersList,bindList)
-                  |"end"::trash -> makeList(tl,END::commandList,constList,lettersList,bindList)
-                  |"fun"::name::param::trash -> makeList(tl,FUN(name,param)::commandList,constList,lettersList,bindList)
+                  |"("::trash -> makeList(tl,LET::commandList,constList,lettersList,bindList)
+                  |")"::trash -> makeList(tl,END::commandList,constList,lettersList,bindList)
+                  |"fun{"::name::param::trash -> makeList(tl,FUN(name,param)::commandList,constList,lettersList,bindList)
+                  |"inOutFun{"::name::param::trash -> makeList(tl,INOUTFUN(name,param)::commandList,constList,lettersList,bindList)
                   |"return"::trash -> makeList(tl,RETURN::commandList,constList,lettersList,bindList)
                   |"call"::trash -> makeList(tl,CALL::commandList,constList,lettersList,bindList)
-                  |"funEnd"::trash -> makeList(tl,FUNEND::commandList,constList,lettersList,bindList)
-                  |"inOutFun"::name::param::trash -> makeList(tl,INOUTFUN(name,param)::commandList,constList,lettersList,bindList)
+                  |"}"::trash -> makeList(tl,FUNEND::commandList,constList,lettersList,bindList)
                   |_-> makeList(tl,PUSH(ERROR)::commandList,constList,lettersList,bindList)
                   )
 in
+
 writeOut(makeList(acc,[],[[]],lettersList,[[]]))
 ;;
