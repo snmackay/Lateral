@@ -1,4 +1,4 @@
-(* Lateral V0.3 Beta
+(* Lateral V0.4 Beta
  * Sean Mackay
  * snmackay@buffalo.edu
  * 3/30/19                          *)
