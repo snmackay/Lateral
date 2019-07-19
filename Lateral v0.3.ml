@@ -6,7 +6,7 @@
 exception Foo of string
 type const = BOOL of bool| INT of int | FLO of float | ERROR | S of string | N of string | UNIT | FUNCT of const*const*(command list)*(const*const) list list
 and
-command = PUSH of const | PUSHI of int | PUSHF of float | PUSHS of string | PUSHN of string | PUSHB of bool | POP | ADD | SUB | MUL | DIV | REM | NEG | SWAP | QUIT | CAT | AND | OR | NOT | EQUAL | LESS | BIND | IF | LET | END | FUN of string*string | RETURN | FUNEND |  CALL | INOUTFUN of string*string
+command = PUSH of const | PUSHI of int | PUSHF of float | PUSHS of string | PUSHN of string | PUSHB of bool | POP | ADD | SUB | MUL | DIV | REM | ROW | NEG | SWAP | QUIT | CAT | AND | OR | NOT | EQUAL | LESS | BIND | IF | LET | END | FUN of string*string | RETURN | FUNEND |  CALL | INOUTFUN of string*string
 
 
 
@@ -379,6 +379,18 @@ let rec addToTuple (commandList,(constList :const list list),(bindList :(const*c
                                                  | (INT(k),INT(l)) -> addToTuple (rl,(INT(l mod k)::ti)::tl,bindList)
                                                  | _ -> addToTuple (rl,(ERROR::N(a)::N(b)::ti)::tl,bindList)
                                                 )
+
+(*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*)
+      (*Floor commands*)
+      |(ROW::rl,(FLO(a)::ti)::tl,_) -> addToTuple (rl,(INT(int_of_float(a))::ti)::tl,bindList)
+      |(ROW::rl,(N(a)::ti)::tl,_) -> (
+                                      match bindListHas(bindList, a) with
+                                      | FLO(k) -> addToTuple (rl,(INT(int_of_float(k))::ti)::tl,bindList)
+                                      | _ -> addToTuple (rl,(ERROR::N(a)::ti)::tl,bindList)
+                                     )
+
+(*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*)
+      (*Negation commands*)
       |(NEG::rl,(INT(0)::ti)::tl,_) -> addToTuple (rl,(INT(0)::ti)::tl,bindList)
       |(NEG::rl,(INT(a)::ti)::tl,_) -> addToTuple (rl,(INT(-a)::ti)::tl,bindList)
       |(NEG::rl,(N(a)::ti)::tl,_) -> (
@@ -387,6 +399,10 @@ let rec addToTuple (commandList,(constList :const list list),(bindList :(const*c
                                       | INT(a) -> addToTuple (rl,(INT(-a)::ti)::tl,bindList)
                                       | _ -> addToTuple (rl,(ERROR::N(a)::ti)::tl,bindList)
                                      )
+
+(*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*)
+      (*Other commands*)
+
       |(SWAP::rl,(a::b::ti)::tl,_) -> addToTuple (rl,(b::a::ti)::tl,bindList)
       |(QUIT::_,_,_) -> constList,bindList
       |(CAT::rl,(S(a)::S(b)::ti)::tl,_) -> addToTuple(rl,(S((String.sub b 0 ((String.length b)-1))^(String.sub a 1 ((String.length a)-1)))::ti)::tl,bindList)
@@ -547,6 +563,7 @@ let rec makeList  (acc,commandList,constList,lettersList,bindList) =
                   |"mul"::trash -> makeList(tl,MUL::commandList,constList,lettersList,bindList)
                   |"div"::trash -> makeList(tl,DIV::commandList,constList,lettersList,bindList)
                   |"rem"::trash -> makeList(tl,REM::commandList,constList,lettersList,bindList)
+                  |"floor"::trash -> makeList(tl,ROW::commandList,constList,lettersList,bindList)
                   |"neg"::trash -> makeList(tl,NEG::commandList,constList,lettersList,bindList)
                   |"swap"::trash -> makeList(tl,SWAP::commandList,constList,lettersList,bindList)
                   |"quit"::trash -> makeList(tl,QUIT::commandList,constList,lettersList,bindList)
