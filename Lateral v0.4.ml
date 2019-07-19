@@ -6,7 +6,7 @@
 exception Foo of string
 type const = BOOL of bool| INT of int | FLO of float | ERROR | S of string | N of string | UNIT | FUNCT of const*const*(command list)*(const*const) list list
 and
-command = PUSH of const | PUSHI of int | PUSHF of float | PUSHS of string | PUSHN of string | PUSHB of bool | POP | ADD | SUB | MUL | DIV | REM | ROW | NEG | SWAP | QUIT | CAT | AND | OR | NOT | EQUAL | LESS | BIND | IF | LET | END | FUN of string*string | RETURN | FUNEND |  CALL | INOUTFUN of string*string
+command = PUSH of const | PUSHI of int | PUSHF of float | PUSHS of string | PUSHN of string | PUSHB of bool | POP | ADD | SUB | MUL | DIV | REM | ROW | NEG | SWAP | QUIT | CAT | AND | OR | NOT | EQUAL | LESS | GREAT | BIND | IF | LET | END | FUN of string*string | RETURN | FUNEND |  CALL | INOUTFUN of string*string
 
 
 
@@ -500,22 +500,84 @@ let rec addToTuple (commandList,(constList :const list list),(bindList :(const*c
                                                 |FLO(l) -> addToTuple(rl,(BOOL(b==l)::ti)::tl,bindList)
                                                 |_ -> addToTuple (rl,(ERROR::N(a)::FLO(b)::ti)::tl,bindList)
                                                 )
+
+(*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*)
+(*Less than operators*)
       |(LESS::rl,(INT(a)::INT(b)::ti)::tl,_) -> addToTuple(rl,(BOOL(b<a)::ti)::tl,bindList)
+      |(LESS::rl,(FLO(a)::FLO(b)::ti)::tl,_) -> addToTuple(rl,(BOOL(b<a)::ti)::tl,bindList)
+      |(LESS::rl,(FLO(a)::INT(b)::ti)::tl,_) -> addToTuple(rl,(BOOL((float_of_int(b))<a)::ti)::tl,bindList)
+      |(LESS::rl,(INT(a)::FLO(b)::ti)::tl,_) -> addToTuple(rl,(BOOL(b<(float_of_int(a)))::ti)::tl,bindList)
       |(LESS::rl,(N(a)::INT(b)::ti)::tl,_) -> (
+                                                match bindListHas(bindList,a) with
+                                                |INT(l) -> addToTuple (rl,(BOOL(b<l)::ti)::tl,bindList)
+                                                |FLO(l) -> addToTuple(rl,(BOOL((float_of_int(b))<l)::ti)::tl,bindList)
+                                                |_ -> addToTuple (rl,(ERROR::N(a)::INT(b)::ti)::tl,bindList)
+                                               )
+      |(LESS::rl,(INT(a)::N(b)::ti)::tl,_) -> (
+                                                match bindListHas(bindList,b) with
+                                                |INT(l) -> addToTuple (rl,(BOOL(l<a)::ti)::tl,bindList)
+                                                |FLO(l) -> addToTuple(rl,(BOOL(l<(float_of_int(a)))::ti)::tl,bindList)
+                                                |_ -> addToTuple (rl,(ERROR::INT(a)::N(b)::ti)::tl,bindList)
+                                               )
+      |(LESS::rl,(N(a)::N(b)::ti)::tl,_) -> (
+                                              match (bindListHas(bindList,a),bindListHas(bindList,b)) with
+                                              |INT(k),INT(l) -> addToTuple (rl,(BOOL(l<k)::ti)::tl,bindList)
+                                              |FLO(k),FLO(l) -> addToTuple (rl,(BOOL(l<k)::ti)::tl,bindList)
+                                              |INT(k),FLO(l) -> addToTuple (rl,(BOOL(l<(float_of_int(k)))::ti)::tl,bindList)
+                                              |FLO(k),INT(l) -> addToTuple (rl,(BOOL((float_of_int(l))<k)::ti)::tl,bindList)
+                                              |_ -> addToTuple (rl,(ERROR::N(a)::N(b)::ti)::tl,bindList)
+                                             )
+      |(LESS::rl,(FLO(a)::N(b)::ti)::tl,_) -> (
+                                                match bindListHas(bindList,b) with
+                                                |INT(l) -> addToTuple (rl,(BOOL((float_of_int(l))<a)::ti)::tl,bindList)
+                                                |FLO(l) -> addToTuple(rl,(BOOL(l<a)::ti)::tl,bindList)
+                                                |_ -> addToTuple (rl,(ERROR::FLO(a)::N(b)::ti)::tl,bindList)
+                                               )
+      |(LESS::rl,(N(a)::FLO(b)::ti)::tl,_) -> (
+                                                match bindListHas(bindList,a) with
+                                                |INT(l) -> addToTuple (rl,(BOOL(b<(float_of_int(l)))::ti)::tl,bindList)
+                                                |FLO(l) -> addToTuple(rl,(BOOL(b<l)::ti)::tl,bindList)
+                                                |_ -> addToTuple (rl,(ERROR::N(a)::FLO(b)::ti)::tl,bindList)
+                                               )
+
+(*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*)
+(*Greater than operators*)
+      |(GREAT::rl,(INT(a)::INT(b)::ti)::tl,_) -> addToTuple(rl,(BOOL(b>a)::ti)::tl,bindList)
+      |(GREAT::rl,(FLO(a)::FLO(b)::ti)::tl,_) -> addToTuple(rl,(BOOL(b>a)::ti)::tl,bindList)
+      |(GREAT::rl,(FLO(a)::INT(b)::ti)::tl,_) -> addToTuple(rl,(BOOL((float_of_int(b))>a)::ti)::tl,bindList)
+      |(GREAT::rl,(INT(a)::FLO(b)::ti)::tl,_) -> addToTuple(rl,(BOOL(b>(float_of_int(a)))::ti)::tl,bindList)
+      |(GREAT::rl,(N(a)::INT(b)::ti)::tl,_) -> (
                                                match bindListHas(bindList,a) with
-                                               |INT(l) -> addToTuple (rl,(BOOL(b<l)::ti)::tl,bindList)
+                                               |INT(l) -> addToTuple (rl,(BOOL(b>l)::ti)::tl,bindList)
+                                               |FLO(l) -> addToTuple(rl,(BOOL((float_of_int(b))>l)::ti)::tl,bindList)
                                                |_ -> addToTuple (rl,(ERROR::N(a)::INT(b)::ti)::tl,bindList)
                                               )
-      |(LESS::rl,(INT(a)::N(b)::ti)::tl,_) -> (
-                                              match bindListHas(bindList,b) with
-                                              |INT(l) -> addToTuple (rl,(BOOL(l<a)::ti)::tl,bindList)
-                                              |_ -> addToTuple (rl,(ERROR::INT(a)::N(b)::ti)::tl,bindList)
+      |(GREAT::rl,(INT(a)::N(b)::ti)::tl,_) -> (
+                                               match bindListHas(bindList,b) with
+                                               |INT(l) -> addToTuple (rl,(BOOL(l>a)::ti)::tl,bindList)
+                                               |FLO(l) -> addToTuple(rl,(BOOL(l>(float_of_int(a)))::ti)::tl,bindList)
+                                               |_ -> addToTuple (rl,(ERROR::INT(a)::N(b)::ti)::tl,bindList)
                                               )
-      |(LESS::rl,(N(a)::N(b)::ti)::tl,_) -> (
-                                            match (bindListHas(bindList,a),bindListHas(bindList,b)) with
-                                            |INT(k),INT(l) -> addToTuple (rl,(BOOL(l<k)::ti)::tl,bindList)
-                                            |_ -> addToTuple (rl,(ERROR::N(a)::N(b)::ti)::tl,bindList)
+      |(GREAT::rl,(N(a)::N(b)::ti)::tl,_) -> (
+                                             match (bindListHas(bindList,a),bindListHas(bindList,b)) with
+                                             |INT(k),INT(l) -> addToTuple (rl,(BOOL(l>k)::ti)::tl,bindList)
+                                             |FLO(k),FLO(l) -> addToTuple (rl,(BOOL(l>k)::ti)::tl,bindList)
+                                             |INT(k),FLO(l) -> addToTuple (rl,(BOOL(l>(float_of_int(k)))::ti)::tl,bindList)
+                                             |FLO(k),INT(l) -> addToTuple (rl,(BOOL((float_of_int(l))>k)::ti)::tl,bindList)
+                                             |_ -> addToTuple (rl,(ERROR::N(a)::N(b)::ti)::tl,bindList)
                                             )
+      |(GREAT::rl,(FLO(a)::N(b)::ti)::tl,_) -> (
+                                               match bindListHas(bindList,b) with
+                                               |INT(l) -> addToTuple (rl,(BOOL((float_of_int(l))>a)::ti)::tl,bindList)
+                                               |FLO(l) -> addToTuple(rl,(BOOL(l>a)::ti)::tl,bindList)
+                                               |_ -> addToTuple (rl,(ERROR::FLO(a)::N(b)::ti)::tl,bindList)
+                                              )
+      |(GREAT::rl,(N(a)::FLO(b)::ti)::tl,_) -> (
+                                               match bindListHas(bindList,a) with
+                                               |INT(l) -> addToTuple (rl,(BOOL(b>(float_of_int(l)))::ti)::tl,bindList)
+                                               |FLO(l) -> addToTuple(rl,(BOOL(b>l)::ti)::tl,bindList)
+                                               |_ -> addToTuple (rl,(ERROR::N(a)::FLO(b)::ti)::tl,bindList)
+                                              )
 
 
       |(BIND::rl,(INT(a)::N(b)::ti)::tl,(lh)::lt) -> addToTuple(rl,(UNIT::ti)::tl,((N(b),INT(a))::lh)::lt) (*TODO logical issue with heap here*)
@@ -595,11 +657,12 @@ let rec makeList  (acc,commandList,constList,lettersList,bindList) =
                   |"swap"::trash -> makeList(tl,SWAP::commandList,constList,lettersList,bindList)
                   |"quit"::trash -> makeList(tl,QUIT::commandList,constList,lettersList,bindList)
                   |"^"::trash -> makeList(tl,CAT::commandList,constList,lettersList,bindList)
-                  |"and"::trash -> makeList(tl,AND::commandList,constList,lettersList,bindList)
-                  |"or"::trash -> makeList(tl,OR::commandList,constList,lettersList,bindList)
-                  |"not"::trash -> makeList(tl,NOT::commandList,constList,lettersList,bindList)
+                  |"&"::trash -> makeList(tl,AND::commandList,constList,lettersList,bindList)
+                  |"|"::trash -> makeList(tl,OR::commandList,constList,lettersList,bindList)
+                  |"~"::trash -> makeList(tl,NOT::commandList,constList,lettersList,bindList)
                   |"=="::trash -> makeList(tl,EQUAL::commandList,constList,lettersList,bindList)
-                  |"lessthan"::trash -> makeList(tl,LESS::commandList,constList,lettersList,bindList)
+                  |"<"::trash -> makeList(tl,LESS::commandList,constList,lettersList,bindList)
+                  |">"::trash -> makeList(tl,GREAT::commandList,constList,lettersList,bindList)
                   |"tie"::trash -> makeList(tl,BIND::commandList,constList,lettersList,bindList)
                   |"if"::trash -> makeList(tl,IF::commandList,constList,lettersList,bindList)
                   |"("::trash -> makeList(tl,LET::commandList,constList,lettersList,bindList)
