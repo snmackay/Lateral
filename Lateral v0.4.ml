@@ -4,9 +4,9 @@
  * 3/30/19                          *)
 
 exception Foo of string
-type const = BOOL of bool| INT of int | FLO of float | ERROR | S of string | N of string | UNIT | FUNCT of const*const*(command list)*(const*const) list list
+type const = BOOL of bool| INT of int | FLO of float | ERROR | S of string | C of char | N of string | UNIT | FUNCT of const*const*(command list)*(const*const) list list
 and
-command = PUSH of const | PUSHI of int | PUSHF of float | PUSHS of string | PUSHN of string | PUSHB of bool | POP | ADD | SUB | MUL | DIV | REM | ROW | NEG | SWAP | QUIT | CAT | AND | OR | NOT | EQUAL | LESS | GREAT | BIND | IF | LET | END | FUN of string*string | RETURN | FUNEND |  CALL | INOUTFUN of string*string
+command = PUSH of const | PUSHI of int | PUSHF of float | PUSHS of string | PUSHC of char | PUSHN of string | PUSHB of bool | POP | ADD | SUB | MUL | DIV | REM | ROW | NEG | SWAP | QUIT | CAT | AND | OR | NOT | EQUAL | LESS | GREAT | CONTAIN | BIND | IF | LET | END | FUN of string*string | RETURN | FUNEND |  CALL | INOUTFUN of string*string
 
 
 
@@ -639,6 +639,7 @@ let rec makeList  (acc,commandList,constList,lettersList,bindList) =
                   |"str"::rl -> ( if (Char.equal (String.concat " " rl).[0] '"') && (Char.equal(String.concat " " rl).[String.length(String.concat " " rl)-1] '"')
                                     then makeList(tl,PUSHS(String.concat " " rl)::commandList,constList,lettersList,bindList) else
                                     makeList(tl,PUSH(ERROR)::commandList,constList,lettersList,bindList)  )
+                  |"char"::rl::trash ->(makeList(tl,PUSHC(String.get rl 1)::commandList,constList,lettersList,bindList))
                   |"var"::rl::trash -> makeList(tl,(nvalid rl lettersList)::commandList,constList,lettersList,bindList)
                   |"errun"::rl::trash ->  (
                                   match (rl) with
@@ -672,6 +673,7 @@ let rec makeList  (acc,commandList,constList,lettersList,bindList) =
                   |"return"::trash -> makeList(tl,RETURN::commandList,constList,lettersList,bindList)
                   |"call"::trash -> makeList(tl,CALL::commandList,constList,lettersList,bindList)
                   |"}"::trash -> makeList(tl,FUNEND::commandList,constList,lettersList,bindList)
+                  |"contains"::trash -> makeList(tl,CONTAIN::commandList,constList,lettersList,bindList)
                   |_-> makeList(tl,PUSH(ERROR)::commandList,constList,lettersList,bindList)
                   )
 in
