@@ -46,6 +46,7 @@ let rec writeOut ((constList: const list list),bindList) : unit  =
                           |S(a) -> (
                               Printf.fprintf oc "%s\n" (String.sub a 1 ((String.length a)-2));
                               writeOut (((tl)::back),bindList ))
+                          |C(a) -> () (*TODO*)
                           |N(a) -> (
                               Printf.fprintf oc "%s\n" a;
                               writeOut (((tl)::back) ,bindList))
@@ -113,6 +114,14 @@ let rec makeClosure (scopeCounter,funCommands,remCommands) =
   |0,FUNEND::tl -> (List.rev(FUNEND::funCommands),tl)
   |_,FUNEND::tl -> makeClosure(scopeCounter-1,FUNEND::funCommands,tl)
   |_,a::tl -> makeClosure(scopeCounter,a::funCommands,tl)
+in
+
+let rec contains (stringg,cher) =
+  match stringg,cher with
+  |[],[] -> 0
+  |[],h2::t2 ->contains(stringg,t2)
+  |h1::t1,h2::t2 ->1
+  |h1::t1,[] -> contains(t1,cher)
 in
 
 let rec addToTuple (commandList,(constList :const list list),(bindList :(const*const) list list)  ) :(const list list)*(const*const)list list =
@@ -579,6 +588,9 @@ let rec addToTuple (commandList,(constList :const list list),(bindList :(const*c
                                                |_ -> addToTuple (rl,(ERROR::N(a)::FLO(b)::ti)::tl,bindList)
                                               )
 
+(*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*)
+(*Other function*)
+      (*|(CONTAIN::rl,(CHAR(a)::STR(b)::ti)::tl,(lh)::lt) -> ()*)
 
       |(BIND::rl,(INT(a)::N(b)::ti)::tl,(lh)::lt) -> addToTuple(rl,(UNIT::ti)::tl,((N(b),INT(a))::lh)::lt) (*TODO logical issue with heap here*)
       |(BIND::rl,(BOOL(a)::N(b)::ti)::tl,(lh)::lt) -> addToTuple(rl,(UNIT::ti)::tl,((N(b),BOOL(a))::lh)::lt)(*TODO logical issue with heap here*)
